@@ -650,6 +650,10 @@ function MediaUnlockTest_BilibiliTW() {
 
 # 流媒体解锁测试-TikTok区域限制
 function MediaUnlockTest_Tiktok_Region() {
+    if [ "${USE_IPV6}" == 1 ]; then
+        echo -n -e "\r Tiktok Region:\t\t\t\t${Font_Red}IPv6 Is Not Currently Supported${Font_Suffix}\n"
+        return
+    fi
     local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -sL 'https://www.tiktok.com/' --user-agent "${UA_ANDROID}")
     if [ -z "$tmpresult" ]; then
         echo -n -e "\r Tiktok Region:\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
