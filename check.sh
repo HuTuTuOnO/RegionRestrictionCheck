@@ -4583,17 +4583,25 @@ function WebTest_Gemini() {
 
 function WebTest_Claude() {
     local UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-    local response=$(curl ${CURL_DEFAULT_OPTS} -s -L -A "${UA_Browser}" -o /dev/null -w '%{url_effective}' "https://claude.ai/")
-    if [ -z "$response" ]; then
+    local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -s -L -A "${UA_Browser}" -o /dev/null -w '%{http_code}_TAG_%{url_effective}\n' "https://claude.ai/")
+
+    local httpCode=$(echo "$tmpresult" | awk -F'_TAG_' '{print $1}')
+    if [ "$httpCode" == '000' ]; then
         echo -e "\r Claude:\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
         return
     fi
-    if [[ "$response" == "https://claude.ai/" ]]; then
+    local urlEffective=$(echo "$tmpresult" | awk -F'_TAG_' '{print $2}')
+    
+    if [ -z "$urlEffective" ]; then
+        echo -e "\r Claude:\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
+        return
+    fi
+    if [[ "$urlEffective" == "https://claude.ai/" ]]; then
         echo -e "\r Claude:\t\t\t\t${Font_Green}Yes${Font_Suffix}\n"
-    elif [[ "$response" == "https://www.anthropic.com/app-unavailable-in-region" ]]; then
+    elif [[ "$urlEffective" == "https://www.anthropic.com/app-unavailable-in-region" ]]; then
         echo -e "\r Claude:\t\t\t\t${Font_Red}No${Font_Suffix}\n"
     else
-        echo -e "\r Claude:\t\t\t\t${Font_Yellow}Unknown (${response})${Font_Suffix}\n"
+        echo -e "\r Claude:\t\t\t\t${Font_Yellow}Unknown (${urlEffective})${Font_Suffix}\n"
     fi
 }
 
