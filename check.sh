@@ -652,15 +652,15 @@ function MediaUnlockTest_BilibiliTW() {
 function MediaUnlockTest_Tiktok_Region() {
     local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -sL 'https://www.tiktok.com/' --user-agent "${UA_ANDROID}")
     if [ -z "$tmpresult" ]; then
-        echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
+        echo -n -e "\r Tiktok Region:\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
         return
     fi
     local region=$(echo $tmpresult | grep '"region":' | sed 's/.*"region"//' | cut -f2 -d'"')
     if [ -n "$region" ]; then
-        echo -n -e "\r Tiktok Region:\t\t${Font_Green}【${region}】${Font_Suffix}\n"
+        echo -n -e "\r Tiktok Region:\t\t\t\t${Font_Green}【${region}】${Font_Suffix}\n"
         return
     fi
-    echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed${Font_Suffix}\n"
+    echo -n -e "\r Tiktok Region:\t\t\t\t${Font_Red}Failed${Font_Suffix}\n"
 
 }
 
