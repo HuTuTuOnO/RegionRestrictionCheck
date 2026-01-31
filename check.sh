@@ -538,33 +538,6 @@ function GameTest_Steam() {
     echo -n -e "\r Steam Currency:\t\t\t${Font_Green}${result}${Font_Suffix}\n"
 }
 
-function MediaUnlockTest_Tiktok_Region() {
-    echo -n -e " Tiktok Region:\t\t\c"
-    local Ftmpresult=$(curl $useNIC --user-agent "${UA_Browser}" -s --max-time 10 "https://www.tiktok.com/")
-
-    if [[ "$Ftmpresult" = "curl"* ]]; then
-        echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
-        return
-    fi
-
-    local FRegion=$(echo $Ftmpresult | grep '"region":' | sed 's/.*"region"//' | cut -f2 -d'"')
-    if [ -n "$FRegion" ]; then
-        echo -n -e "\r Tiktok Region:\t\t${Font_Green}【${FRegion}】${Font_Suffix}\n"
-        return
-    fi
-
-    local STmpresult=$(curl $useNIC --user-agent "${UA_Browser}" -sL --max-time 10 -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9" -H "Accept-Encoding: gzip" -H "Accept-Language: en" "https://www.tiktok.com" | gunzip 2>/dev/null)
-    local SRegion=$(echo $STmpresult | grep '"region":' | sed 's/.*"region"//' | cut -f2 -d'"')
-    if [ -n "$SRegion" ]; then
-        echo -n -e "\r Tiktok Region:\t\t${Font_Yellow}【${SRegion}】(可能为IDC IP)${Font_Suffix}\n"
-        return
-    else
-        echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed${Font_Suffix}\n"
-        return
-    fi
-
-}
-
 # 流媒体解锁测试-动画疯
 function MediaUnlockTest_BahamutAnime() {
     if [ "${USE_IPV6}" == 1 ]; then
@@ -673,6 +646,22 @@ function MediaUnlockTest_BilibiliTW() {
         '-10403') echo -n -e "\r Bilibili Taiwan Only:\t\t\t${Font_Red}No${Font_Suffix}\n" ;;
         *) echo -n -e "\r Bilibili Taiwan Only:\t\t\t${Font_Red}Failed (Error: ${result})${Font_Suffix}\n" ;;
     esac
+}
+
+# 流媒体解锁测试-TikTok区域限制
+function MediaUnlockTest_Tiktok_Region() {
+    local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -sL 'https://www.tiktok.com/' --user-agent "${UA_ANDROID}")
+    if [ -z "$tmpresult" ]; then
+        echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
+        return
+    fi
+    local region=$(echo $tmpresult | grep '"region":' | sed 's/.*"region"//' | cut -f2 -d'"')
+    if [ -n "$region" ]; then
+        echo -n -e "\r Tiktok Region:\t\t${Font_Green}【${region}】${Font_Suffix}\n"
+        return
+    fi
+    echo -n -e "\r Tiktok Region:\t\t${Font_Red}Failed${Font_Suffix}\n"
+
 }
 
 function MediaUnlockTest_AbemaTV() {
@@ -5040,7 +5029,7 @@ function Global_UnlockTest() {
         MediaUnlockTest_Tiktok_Region &
     )
     wait
-    local array=("Dazn:" "Disney+:" "Netflix:" "YouTube Premium:" "Amazon Prime Video:" "TVBAnywhere+:" "Spotify Registration:" "OneTrust Region:" "iQyi Oversea Region:")
+    local array=("Dazn:" "Disney+:" "Netflix:" "YouTube Premium:" "Amazon Prime Video:" "TVBAnywhere+:" "Spotify Registration:" "OneTrust Region:" "iQyi Oversea Region:" "Tiktok Region:")
     echo_result ${result} ${array}
     local result=$(
         RegionTest_Bing &
