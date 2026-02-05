@@ -671,6 +671,21 @@ function MediaUnlockTest_Tiktok_Region() {
 
 }
 
+function WebTest_Sora() {
+    local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -sLI --user-agent "${UA_BROWSER}" --max-time 10 "https://sora.com" 2>&1)
+    if [[ "$tmpresult" == "curl"* ]] || [ -z "$tmpresult" ]; then
+        echo -n -e "\r Sora:\t\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
+        return
+    fi
+    local result1=$(echo "$tmpresult" | grep -i 'location')
+    if [ -z "$result1" ]; then
+        echo -n -e "\r Sora:\t\t\t\t\t${Font_Red}No${Font_Suffix}\n"
+    else
+        local region1=$(curl ${CURL_DEFAULT_OPTS} -sL --user-agent "${UA_BROWSER}" --max-time 10 "https://sora.com/cdn-cgi/trace" 2>&1 | grep "loc=" | awk -F= '{print $2}')
+        echo -n -e "\r Sora:\t\t\t\t\t${Font_Green}Yes (Region: ${region1})${Font_Suffix}\n"
+    fi
+}
+
 function MediaUnlockTest_AbemaTV() {
     if [ "${USE_IPV6}" == 1 ]; then
         echo -n -e "\r Abema.TV:\t\t\t\t${Font_Red}IPv6 Is Not Currently Supported${Font_Suffix}\n"
@@ -5052,6 +5067,7 @@ function Global_UnlockTest() {
         RegionTest_YouTubeCDN &
         RegionTest_NetflixCDN &
         WebTest_OpenAI &
+        WebTest_Sora &
         WebTest_Gemini &
         WebTest_Claude &
         WebTest_Wikipedia_Editable &
@@ -5060,7 +5076,7 @@ function Global_UnlockTest() {
         GameTest_Steam &
     )
     wait
-    local array=("Bing Region:" "Apple Region:" "YouTube CDN:" "Netflix Preferred CDN:" "ChatGPT:" "Google Gemini:" "Claude:" "Wikipedia Editability:" "Google Play Store:" "Google Search CAPTCHA Free:" "Steam Currency:")
+    local array=("Bing Region:" "Apple Region:" "YouTube CDN:" "Netflix Preferred CDN:" "ChatGPT:" "Sora:" "Google Gemini:" "Claude:" "Wikipedia Editability:" "Google Play Store:" "Google Search CAPTCHA Free:" "Steam Currency:")
     echo_result ${result} ${array}
     show_region Forum
     WebTest_Reddit
