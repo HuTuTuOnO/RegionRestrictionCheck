@@ -210,6 +210,8 @@ check_net_connctivity() {
     if [ "$1" == 4 ]; then
         local result1=$(curl -4 ${CURL_OPTS} -fs 'https://www.google.com' -o /dev/null -s -w '%{http_code}\n')
         if [ "$result1" != '000' ]; then
+            return 0
+        else
             local result3=$(curl -4 ${CURL_OPTS} -fs 'https://www.cloudflare.com' -o /dev/null -s -w '%{http_code}\n')
             if [ "$result3" != '000' ]; then
                 return 0
@@ -220,6 +222,8 @@ check_net_connctivity() {
     if [ "$1" == 6 ]; then
         local result2=$(curl -6 ${CURL_OPTS} -fs 'https://www.google.com' -o /dev/null -s -w '%{http_code}\n')
         if [ "$result2" != '000' ]; then
+            return 0
+        else
             local result4=$(curl -6 ${CURL_OPTS} -fs 'https://www.cloudflare.com' -o /dev/null -s -w '%{http_code}\n')
             if [ "$result4" != '000' ]; then
                 return 0
