@@ -1615,7 +1615,7 @@ function MediaUnlockTest_Niconico() {
     # 从直播网页中找到第一个官方直播剧
     # echo "$tmpresult2" | grep -woP 'id="DAT-csr-data" data-value="[^"]+' | sed 's/id="DAT-csr-data" data-value="//;s/&quot;/"/g' | \
     # jq -r '.props.view.popularBeforeOpenBroadcastStatusProgramListSectionState.programList.[] | select(.isOfficialChannelMemberFree == false) | .id' | head -n 1
-    local liveID=$(echo "$tmpresult2" | sed 's/&quot;isOfficialChannelMemberFree&quot;:false/&quot;isOfficialChannelMemberFree&quot;:false\r\n/g' | grep -v '&quot;isOfficialChannelMemberFree&quot;:true' | grep -v -E 'playerProgram|&quot;ON_AIR&quot;' | grep '話' | grep -woP '&quot;id&quot;:&quot;\Klv[0-9]+' | head -n 1)
+    local liveID=$(echo "$tmpresult2" | sed 's/&quot;isOfficialChannelMemberFree&quot;:false/&quot;isOfficialChannelMemberFree&quot;:false\r\n/g' | grep -v '&quot;isOfficialChannelMemberFree&quot;:true' | grep '話' | sed 's/},{/}\n{/g' | grep -v 'playerProgram' | grep -v '&quot;ON_AIR&quot;' | grep -oP '&quot;nicoliveProgramId&quot;:&quot;\Klv[0-9]+' | head -n 1)
     if [ -z "$liveID" ]; then
         echo -n -e "\r Niconico:\t\t\t\t${Font_Red}Failed (Error: PAGE ERROR)${Font_Suffix}\n"
         return
