@@ -1106,75 +1106,24 @@ function MediaUnlockTest_wowow() {
         return
     fi
 
-    local timestamp=$[$(date +%s%N)/1000000]
-    # 取原创剧集列表
-    local tmpresult=$(curl ${CURL_DEFAULT_OPTS} -s "https://www.wowow.co.jp/drama/original/json/lineup.json?_=${timestamp}" -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.wowow.co.jp/drama/original/' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'X-Requested-With: XMLHttpRequest' -H 'accept-language: en-US,en;q=0.9' -H "sec-ch-ua: ${UA_SEC_CH_UA}" -H 'sec-ch-ua-mobile: ?0' -H 'sec-ch-ua-platform: "Windows"' --user-agent "${UA_BROWSER}")
-    if [ -z "$tmpresult" ]; then
+    local tmpresult=$(curl ${CURL_DEFAULT_OPTS} --user-agent "${UA_BROWSER}" -sS --max-time 10 "https://mapi.wowow.co.jp/api/v1/playback/auth" -X POST -d '{"meta_id":81174}' -H "Content-Type: application/json" 2>&1)
+    if [[ "$tmpresult" == "curl"* ]]; then
         echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
         return
     fi
-    # 取无料剧集来播放 example: https://www.wowow.co.jp/drama/original/hakubo/
-    local playUrlList=$(echo "$tmpresult" | grep -woP '"link"\s{0,}:\s{0,}"\K[^"]+' | grep 'drama/original' | head -n 4 | xargs)
-    if [ -z "$playUrlList" ]; then
-        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Error: PAGE ERROR)${Font_Suffix}\n"
-        return
-    fi
-
-    for playUrl in $playUrlList ; do
-        # 访问并获取真实链接
-        local tmpresult2=$(curl ${CURL_DEFAULT_OPTS} -s "${playUrl}" --user-agent "${UA_BROWSER}")
-        if [ -z "$tmpresult2" ]; then
-            echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Network Connection 1)${Font_Suffix}\n"
-            return
-        fi
-
-        # 取得真实链接
-        local wodUrl=$(echo "$tmpresult2" | grep -o '"https://wod.wowow.co.jp/content/.*"' | cut -f2 -d'"' | head -n 1)
-        if [ -n "$wodUrl" ]; then
-            break
-        fi
-    done
-
-    if [ -z "$wodUrl" ]; then
-        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Error: PAGE ERROR 1)${Font_Suffix}\n"
-        return
-    fi
-
-    # 访问并获取 meta_id
-    local tmpresult3=$(curl ${CURL_DEFAULT_OPTS} -s "$wodUrl" -H 'accept: */*;q=0.8,application/signed-exchange;v=b3;q=0.7' -H 'accept-language: en-US,en;q=0.9' -H "sec-ch-ua: ${UA_SEC_CH_UA}" -H 'sec-ch-ua-mobile: ?0' -H 'sec-ch-ua-platform: "Windows"' -H 'sec-fetch-dest: document' -H 'sec-fetch-mode: navigate' -H 'sec-fetch-site: none' -H 'sec-fetch-user: ?1' -H 'upgrade-insecure-requests: 1' --user-agent "${UA_BROWSER}")
-
-    if [ -z "$tmpresult3" ]; then
-        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Network Connection 2)${Font_Suffix}\n"
-        return
-    fi
-
-    local metaId=$(echo "$tmpresult3" | grep -woP '"https://wod.wowow.co.jp/watch/\K\d{0,}[^"]+')
-    # Fake Vistor UID
-    local vUid=$(echo -n "$timestamp" | md5sum | cut -f1 -d' ')
-    # 最终测试
-    local tmpresult4=$(curl ${CURL_DEFAULT_OPTS} -s 'https://mapi.wowow.co.jp/api/v1/playback/auth' -H 'accept: application/json, text/plain, */*' -H 'content-type: application/json;charset=UTF-8' -H 'origin: https://wod.wowow.co.jp' -H 'referer: https://wod.wowow.co.jp/' -H 'accept-language: en-US,en;q=0.9' -H "sec-ch-ua: ${UA_SEC_CH_UA}" -H 'sec-ch-ua-mobile: ?0' -H 'sec-ch-ua-platform: "Windows"' -H 'sec-fetch-dest: empty' -H 'sec-fetch-mode: cors' -H 'sec-fetch-site: same-site' -H 'x-requested-with: XMLHttpRequest' --data-raw "{\"meta_id\":${metaId},\"vuid\":\"${vUid}\",\"device_code\":1,\"app_id\":1,\"ua\":\"${UA_BROWSER}\"}" --user-agent "${UA_BROWSER}")
-    if [ -z "$tmpresult4" ]; then
-        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Network Connection 3)${Font_Suffix}\n"
-        return
-    fi
-    local isBlocked=$(echo "$tmpresult4" | grep -i 'VPN')
-    local isOK=$(echo "$tmpresult4" | grep -i 'playback_session_id')
-
-    if [ -z "$isBlocked" ] && [ -z "$isOK" ]; then
-        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Error: PAGE ERROR 2)${Font_Suffix}\n"
-        return
-    fi
-
-    if [ -n "$isBlocked" ]; then
+    
+    checkfailed=$(echo "$tmpresult" | grep -oP '"error":\s*\{[^}]*"code":\s*\K\d+' | head -n 1)
+    if [[ "$checkfailed" == "2055" ]]; then
         echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}No${Font_Suffix}\n"
         return
-    fi
-    if [ -n "$isOK" ]; then
+    elif [[ "$checkfailed" == "2041" ]] || [[ "$checkfailed" == "2003" ]]; then
         echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Green}Yes${Font_Suffix}\n"
         return
+    else
+        echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Unknown (Code: $checkfailed)${Font_Suffix}\n"
+        return
     fi
-
-    echo -n -e "\r WOWOW:\t\t\t\t\t${Font_Red}Failed (Error: Unknown)${Font_Suffix}\n"
+    
 }
 
 function MediaUnlockTest_TVer() {
