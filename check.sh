@@ -205,6 +205,11 @@ if [ -z "$func" ]; then
     local_ipv4=$(curl $curlArgs -4 -s --max-time 10 cloudflare.com/cdn-cgi/trace | grep ip | awk -F= '{print $2}' &)
     local_ipv6=$(curl $curlArgs -6 -s --max-time 20 cloudflare.com/cdn-cgi/trace | grep ip | awk -F= '{print $2}' &)
     wait
+    if [[ -z "$local_ipv4" || -z "$local_ipv6" ]]; then
+        [[ -z "$local_ipv4" ]] && local_ipv4=$(curl $curlArgs -4 -s --max-time 10 https://api64.ipify.org &)
+        [[ -z "$local_ipv6" ]] && local_ipv6=$(curl $curlArgs -6 -s --max-time 20 https://api64.ipify.org &)
+        wait
+    fi
     # bgptools_v4=$(curl $curlArgs -s -4 --max-time 10 --user-agent "${UA_Browser}" "https://v4.bgp.tools/whoami-not-for-robots" &)
     # bgptools_v6=$(curl $curlArgs -s -6 --max-time 10 --user-agent "${UA_Browser}" "https://v6.bgp.tools/whoami-not-for-robots" &)
     ripe_stat_v4=$(curl $curlArgs -s --max-time 10 "https://stat.ripe.net/data/prefix-overview/data.json?resource=$local_ipv4" &)
