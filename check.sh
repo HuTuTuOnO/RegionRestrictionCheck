@@ -1124,7 +1124,7 @@ function MediaUnlockTest_YouTube_Premium() {
 
     local isCN=$(echo $tmpresult | grep 'www.google.cn')
     if [ -n "$isCN" ]; then
-        echo -n -e "\r YouTube Premium:\t\t\t${Font_Red}No${Font_Suffix} ${Font_Green} (Region: CN)${Font_Suffix} \n"
+        echo -n -e "\r YouTube Premium:\t\t\t${Font_Red}No  (Region: CN)${Font_Suffix} \n"
         return
     fi
 
